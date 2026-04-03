@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Shop premium men's fashion at Golden Collection. Browse luxury brands like Armani Exchange, Ralph Lauren, Tommy Hilfiger, and more.">
+  <title>Shop — Golden Collection</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/home.css">
+  <link rel="stylesheet" href="css/shop.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👑</text></svg>">
+</head>
+<body>
+  <div id="navbar-placeholder"></div>
+
+  <section class="shop-header">
+    <div class="container">
+      <nav class="breadcrumb-list">
+        <a href="index.html">Home</a> <span class="separator">/</span> <span class="current">Shop</span>
+      </nav>
+      <h1>The <span class="gold-text">Collection</span></h1>
+      <p>Luxury menswear curated from the world's finest brands</p>
+    </div>
+  </section>
+
+  <div class="container">
+    <div class="filter-overlay" id="filterOverlay"></div>
+    <button class="btn btn-secondary filter-toggle-btn" onclick="toggleFilters()">☰ Filters</button>
+
+    <div class="shop-layout">
+      <!-- Sidebar Filters -->
+      <aside class="shop-sidebar" id="shopSidebar">
+        <div class="filter-section">
+          <h3 class="filter-title">Category</h3>
+          <div class="filter-options" id="categoryFilters">
+            <label class="filter-option"><input type="checkbox" value="casual" onchange="applyFilters()"> Casual Wear <span class="count" id="count-casual"></span></label>
+            <label class="filter-option"><input type="checkbox" value="formal" onchange="applyFilters()"> Formal Wear <span class="count" id="count-formal"></span></label>
+            <label class="filter-option"><input type="checkbox" value="streetwear" onchange="applyFilters()"> Streetwear <span class="count" id="count-streetwear"></span></label>
+            <label class="filter-option"><input type="checkbox" value="accessories" onchange="applyFilters()"> Accessories <span class="count" id="count-accessories"></span></label>
+          </div>
+        </div>
+        <div class="filter-section">
+          <h3 class="filter-title">Brand</h3>
+          <div class="filter-options" id="brandFilters"></div>
+        </div>
+        <div class="filter-section">
+          <h3 class="filter-title">Price Range</h3>
+          <div class="price-range-inputs">
+            <input type="number" id="priceMin" placeholder="₹ Min" onchange="applyFilters()">
+            <span>—</span>
+            <input type="number" id="priceMax" placeholder="₹ Max" onchange="applyFilters()">
+          </div>
+        </div>
+        <div class="filter-section">
+          <h3 class="filter-title">Size</h3>
+          <div class="size-options" id="sizeFilters"></div>
+        </div>
+        <button class="btn btn-dark btn-sm clear-filters-btn" onclick="clearFilters()">Clear All Filters</button>
+      </aside>
+
+      <!-- Product Grid -->
+      <div class="shop-main">
+        <div class="shop-toolbar">
+          <p class="result-count">Showing <span id="resultCount">0</span> products</p>
+          <select class="sort-select" id="sortSelect" onchange="applyFilters()">
+            <option value="featured">Featured</option>
+            <option value="price-asc">Price: Low to High</option>
+            <option value="price-desc">Price: High to Low</option>
+            <option value="rating">Highest Rated</option>
+            <option value="newest">Newest First</option>
+          </select>
+        </div>
+        <div class="product-grid" id="shopGrid"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="footer-placeholder"></div>
+
+  <script src="js/products.js"></script>
+  <script src="js/cart.js"></script>
+  <script src="js/wishlist.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    let activeFilters = { categories: [], brands: [], priceMin: 0, priceMax: Infinity, sizes: [] };
+
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('navbar-placeholder').innerHTML = getNavbarHTML();
+      document.getElementById('footer-placeholder').innerHTML = getFooterHTML();
+      initNavbar(); initSearch(); cart.updateBadge(); wishlist.updateBadge(); auth.updateUI();
+
+      // Category counts
+      ['casual','formal','streetwear','accessories'].forEach(cat => {
+        const el = document.getElementById('count-' + cat);
+        if (el) el.textContent = '(' + getProductsByCategory(cat).length + ')';
+      });
+
+      // Brand filters
+      const brands = [...new Set(PRODUCTS.map(p => p.brand))].sort();
+      document.getElementById('brandFilters').innerHTML = brands.map(b => {
+        const count = PRODUCTS.filter(p => p.brand === b).length;
+        return `<label class="filter-option"><input type="checkbox" value="${b}" onchange="applyFilters()"> ${b} <span class="count">(${count})</span></label>`;
+      }).join('');
+
+      // Size filters
+      const sizes = [...new Set(PRODUCTS.flatMap(p => p.sizes))];
+      const orderedSizes = ['S','M','L','XL','XXL','30','32','34','36','38','40','42','44','46','85cm','90cm','95cm','100cm','One Size'];
+      const sortedSizes = sizes.sort((a,b) => orderedSizes.indexOf(a) - orderedSizes.indexOf(b));
+      document.getElementById('sizeFilters').innerHTML = sortedSizes.map(s =>
+        `<button class="size-btn" data-size="${s}" onclick="toggleSize(this,'${s}')">${s}</button>`
+      ).join('');
+
+      // URL params
+      const params = new URLSearchParams(window.location.search);
+      const cat = params.get('category');
+      if (cat) {
+        const cb = document.querySelector(`#categoryFilters input[value="${cat}"]`);
+        if (cb) cb.checked = true;
+      }
+      const search = params.get('search');
+      if (search) document.getElementById('searchParam').value = search;
+
+      applyFilters();
+      initScrollAnimations();
+    });
+
+    function toggleFilters() {
+      document.getElementById('shopSidebar').classList.toggle('active');
+      document.getElementById('filterOverlay').classList.toggle('active');
+    }
+
+    document.getElementById('filterOverlay')?.addEventListener('click', toggleFilters);
+
+    function toggleSize(btn, size) {
+      btn.classList.toggle('active');
+      applyFilters();
+    }
+
+    function applyFilters() {
+      // Gather filter values
+      const catCheckboxes = document.querySelectorAll('#categoryFilters input:checked');
+      const brandCheckboxes = document.querySelectorAll('#brandFilters input:checked');
+      const activeSizes = document.querySelectorAll('.size-btn.active');
+      const priceMin = parseInt(document.getElementById('priceMin').value) || 0;
+      const priceMax = parseInt(document.getElementById('priceMax').value) || Infinity;
+      const sort = document.getElementById('sortSelect').value;
+
+      const selectedCats = [...catCheckboxes].map(cb => cb.value);
+      const selectedBrands = [...brandCheckboxes].map(cb => cb.value);
+      const selectedSizes = [...activeSizes].map(btn => btn.dataset.size);
+
+      let filtered = [...PRODUCTS];
+
+      if (selectedCats.length > 0) filtered = filtered.filter(p => selectedCats.includes(p.category));
+      if (selectedBrands.length > 0) filtered = filtered.filter(p => selectedBrands.includes(p.brand));
+      if (selectedSizes.length > 0) filtered = filtered.filter(p => p.sizes.some(s => selectedSizes.includes(s)));
+      filtered = filtered.filter(p => p.price >= priceMin && p.price <= priceMax);
+
+      // Sort
+      switch(sort) {
+        case 'price-asc': filtered.sort((a,b) => a.price - b.price); break;
+        case 'price-desc': filtered.sort((a,b) => b.price - a.price); break;
+        case 'rating': filtered.sort((a,b) => b.rating - a.rating); break;
+        case 'newest': filtered.sort((a,b) => b.id - a.id); break;
+      }
+
+      document.getElementById('resultCount').textContent = filtered.length;
+      const grid = document.getElementById('shopGrid');
+      if (filtered.length === 0) {
+        grid.innerHTML = '<div class="no-results"><h3>No products found</h3><p>Try adjusting your filters</p></div>';
+      } else {
+        grid.innerHTML = filtered.map(p => createProductCard(p)).join('');
+      }
+      wishlist.updateAllButtons();
+    }
+
+    function clearFilters() {
+      document.querySelectorAll('.shop-sidebar input[type="checkbox"]').forEach(cb => cb.checked = false);
+      document.querySelectorAll('.size-btn').forEach(btn => btn.classList.remove('active'));
+      document.getElementById('priceMin').value = '';
+      document.getElementById('priceMax').value = '';
+      document.getElementById('sortSelect').value = 'featured';
+      applyFilters();
+    }
+  </script>
+</body>
+</html>

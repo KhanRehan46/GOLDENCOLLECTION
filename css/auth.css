@@ -1,0 +1,125 @@
+/* ============================================
+   GOLDEN COLLECTION — Auth Page Styles
+   ============================================ */
+.auth-page {
+  margin-top: var(--nav-height);
+  min-height: calc(100vh - var(--nav-height));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-2xl);
+}
+
+.auth-container {
+  width: 100%;
+  max-width: 460px;
+}
+
+.auth-card {
+  background: var(--black-light);
+  border: 1px solid rgba(212,168,83,0.15);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3xl);
+  box-shadow: var(--shadow-lg);
+}
+
+.auth-header {
+  text-align: center;
+  margin-bottom: var(--space-2xl);
+}
+
+.auth-header h1 {
+  font-size: 1.8rem;
+  margin-bottom: var(--space-sm);
+}
+
+.auth-header p {
+  color: var(--gray-400);
+  font-size: 0.9rem;
+}
+
+/* Tabs */
+.auth-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--gray-600);
+  margin-bottom: var(--space-xl);
+}
+
+.auth-tab {
+  flex: 1;
+  padding: var(--space-md);
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--gray-400);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all var(--transition-fast);
+  background: none;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+}
+
+.auth-tab:hover { color: var(--gray-200); }
+
+.auth-tab.active {
+  color: var(--gold);
+  border-bottom-color: var(--gold);
+}
+
+.auth-form { display: none; }
+.auth-form.active { display: block; }
+
+.auth-form .btn {
+  width: 100%;
+  margin-top: var(--space-md);
+}
+
+.form-error {
+  color: var(--red);
+  font-size: 0.82rem;
+  margin-top: var(--space-sm);
+  display: none;
+}
+
+.form-error.show { display: block; }
+
+.auth-divider {
+  display: flex;
+  align-items: center;
+  margin: var(--space-xl) 0;
+  gap: var(--space-md);
+  color: var(--gray-500);
+  font-size: 0.8rem;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--gray-600);
+}
+
+.password-toggle {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--gray-500);
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.password-toggle:hover { color: var(--gold); }
+
+.form-group-password {
+  position: relative;
+}
+
+@media (max-width: 480px) {
+  .auth-card { padding: var(--space-xl); }
+}

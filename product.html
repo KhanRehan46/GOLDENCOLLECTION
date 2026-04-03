@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Product details — Golden Collection luxury menswear.">
+  <title>Product — Golden Collection</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/home.css">
+  <link rel="stylesheet" href="css/product.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👑</text></svg>">
+</head>
+<body>
+  <div id="navbar-placeholder"></div>
+
+  <section class="product-detail">
+    <div class="container">
+      <nav class="breadcrumb-list" id="breadcrumb" style="margin-bottom:var(--space-xl);"></nav>
+      <div class="product-detail-grid" id="productDetail"></div>
+    </div>
+  </section>
+
+  <section class="related-section">
+    <div class="container">
+      <h2 class="section-title">You May Also <span class="gold-text">Like</span></h2>
+      <p class="section-subtitle">Curated selections to complement your style</p>
+      <div class="product-grid" id="relatedGrid"></div>
+    </div>
+  </section>
+
+  <div id="footer-placeholder"></div>
+
+  <script src="js/products.js"></script>
+  <script src="js/cart.js"></script>
+  <script src="js/wishlist.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    let selectedSize = null;
+    let quantity = 1;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('navbar-placeholder').innerHTML = getNavbarHTML();
+      document.getElementById('footer-placeholder').innerHTML = getFooterHTML();
+      initNavbar(); initSearch(); cart.updateBadge(); wishlist.updateBadge(); auth.updateUI();
+
+      const params = new URLSearchParams(window.location.search);
+      const productId = parseInt(params.get('id'));
+      const product = getProductById(productId);
+
+      if (!product) {
+        document.getElementById('productDetail').innerHTML = '<div class="empty-state"><h3>Product not found</h3><p>This product may no longer be available.</p><a href="shop.html" class="btn btn-primary">Back to Shop</a></div>';
+        return;
+      }
+
+      document.title = `${product.name} — Golden Collection`;
+      const discount = getDiscountPercent(product.originalPrice, product.price);
+
+      document.getElementById('breadcrumb').innerHTML = `
+        <a href="index.html">Home</a><span class="separator">/</span>
+        <a href="shop.html">Shop</a><span class="separator">/</span>
+        <a href="shop.html?category=${product.category}">${product.category.charAt(0).toUpperCase() + product.category.slice(1)}</a><span class="separator">/</span>
+        <span class="current">${product.name}</span>`;
+
+      document.getElementById('productDetail').innerHTML = `
+        <div class="product-gallery">
+          <div class="product-main-image">
+            <img src="${product.image}" alt="${product.name}" id="mainImage">
+          </div>
+        </div>
+        <div class="product-info">
+          <div class="brand">${product.brand}</div>
+          <h1>${product.name}</h1>
+          <div class="product-rating-row">
+            <span class="stars">${getStarsHTML(product.rating)}</span>
+            <span class="review-count">${product.rating} (${product.reviews} reviews)</span>
+          </div>
+          <div class="product-price-box">
+            <span class="current-price">${formatPrice(product.price)}</span>
+            ${product.originalPrice > product.price ? `<span class="original-price">${formatPrice(product.originalPrice)}</span><span class="discount-tag">${discount}% OFF</span>` : ''}
+          </div>
+          <p class="product-description">${product.description}</p>
+          <span class="option-label">Select Size</span>
+          <div class="size-selector">
+            ${product.sizes.map(s => `<button class="size-option" onclick="selectSize(this,'${s}')">${s}</button>`).join('')}
+          </div>
+          <span class="option-label">Quantity</span>
+          <div class="quantity-selector">
+            <button class="qty-btn" onclick="changeQty(-1)">−</button>
+            <div class="qty-value" id="qtyVal">1</div>
+            <button class="qty-btn" onclick="changeQty(1)">+</button>
+          </div>
+          <div class="product-actions">
+            <button class="btn btn-primary btn-lg" onclick="addToCartDetail(${product.id})">Add to Cart</button>
+            <button class="btn btn-secondary btn-lg" data-wishlist-id="${product.id}" onclick="wishlist.toggle(${product.id})">♡ Wishlist</button>
+          </div>
+          <div class="product-meta">
+            <p>Brand: <span>${product.brand}</span></p>
+            <p>Category: <span>${product.category.charAt(0).toUpperCase() + product.category.slice(1)} Wear</span></p>
+            ${product.colors ? `<p>Colors: <span>${product.colors.join(', ')}</span></p>` : ''}
+          </div>
+        </div>`;
+
+      // Related products (same category, exclude current)
+      const related = PRODUCTS.filter(p => p.category === product.category && p.id !== product.id).slice(0, 4);
+      document.getElementById('relatedGrid').innerHTML = related.map(p => createProductCard(p)).join('');
+      wishlist.updateAllButtons();
+      initScrollAnimations();
+    });
+
+    function selectSize(btn, size) {
+      document.querySelectorAll('.size-option').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      selectedSize = size;
+    }
+
+    function changeQty(delta) {
+      quantity = Math.max(1, quantity + delta);
+      document.getElementById('qtyVal').textContent = quantity;
+    }
+
+    function addToCartDetail(productId) {
+      if (!selectedSize) { showToast('Please select a size', 'error'); return; }
+      cart.add(productId, selectedSize, quantity);
+    }
+  </script>
+</body>
+</html>

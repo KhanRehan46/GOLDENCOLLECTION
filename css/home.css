@@ -147,7 +147,6 @@
   overflow: hidden;
   aspect-ratio: 3/4;
   cursor: pointer;
-  group: true;
 }
 
 .category-card img {
